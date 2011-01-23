@@ -4,7 +4,7 @@
 
 ;; Author: tequilasunset <tequilasunset.mac@gmail.com>
 ;; Keywords: latex, completion
-(defconst ac-ll-version "0.0.1")
+(defconst ac-ll-version "0.0.2")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -145,9 +145,18 @@ All the files in it will be used for `ac-source-latex-dictionary'.")
 (defun ac-ll-dictionary-candidates ()
   (apply 'append
          (mapcar (lambda (f)
-                   ;; Avoid adding candidates to ac-source-dictionary.
-                   (let ((ac-dictionary-cache ac-ll-dictionary-cache))
-                     (ac-read-file-dictionary f)))
+                   (cond
+                    ;; v1.4
+                    ((fboundp 'ac-file-dictionary)
+                     (let ((ac-file-dictionary ac-ll-dictionary-cache))
+                       (ac-file-dictionary f)))
+                    ;; v1.2 or v1.3
+                    ((and (boundp 'ac-dictionary-cache)
+                          (fboundp 'ac-read-file-dictionary))
+                     (let ((ac-dictionary-cache ac-ll-dictionary-cache))
+                       (ac-read-file-dictionary f)))
+                    ((error "\
+auto-complete-latex-light is not compatible with this auto-complete-mode"))))
                  (directory-files ac-ll-dict-directory t "^[^.]"))))
 
 ;;; Sources
