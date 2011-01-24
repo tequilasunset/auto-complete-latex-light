@@ -142,21 +142,21 @@ All the files in it will be used for `ac-source-latex-dictionary'.")
   (interactive)
   (clrhash ac-ll-dictionary-cache))
 
+(defun ac-ll-file-dictionary (filename)
+  (let ((cache (gethash filename ac-ll-dictionary-cache 'none)))
+    (if (and cache (not (eq cache 'none)))
+        cache
+      (let (result)
+        (ignore-errors
+          (with-temp-buffer
+            (insert-file-contents filename)
+            (setq result (split-string (buffer-string) "\n"))))
+        (puthash filename result ac-ll-dictionary-cache)
+        result))))
+
 (defun ac-ll-dictionary-candidates ()
-  (apply 'append
-         (mapcar (lambda (f)
-                   (cond
-                    ;; v1.4
-                    ((fboundp 'ac-file-dictionary)
-                     (let ((ac-file-dictionary ac-ll-dictionary-cache))
-                       (ac-file-dictionary f)))
-                    ;; v1.2 or v1.3
-                    ((and (boundp 'ac-dictionary-cache)
-                          (fboundp 'ac-read-file-dictionary))
-                     (let ((ac-dictionary-cache ac-ll-dictionary-cache))
-                       (ac-read-file-dictionary f)))
-                    ((error "\
-auto-complete-latex-light is not compatible with this auto-complete-mode"))))
+  (apply #'append
+         (mapcar #'ac-ll-file-dictionary
                  (directory-files ac-ll-dict-directory t "^[^.]"))))
 
 ;;; Sources
